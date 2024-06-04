@@ -32,7 +32,7 @@ def parse_arguments():
     parser.add_argument("COMMAND", nargs="?")
     return parser.parse_args()
 
-def main():
+def main() -> int:
     args = parse_arguments()
     cmd: str | None = args.COMMAND
 
@@ -50,10 +50,11 @@ def main():
         print("Commands:")
         for file in sorted(map(Path, glob(f"{DATADIR}/*.json"))):
             print(f"    {file.stem}")
-        return
+        return 0
 
     fp = DATADIR / f"{cmd}.json"
     try:
+        # Open command help file
         with open(fp, 'rt') as fd:
             # Get documentation
             data = json.load(fd)
@@ -66,6 +67,8 @@ def main():
         die(f"helpex: Unable to decode '{fp}': {exc}")
 
     print(doc)
+
+    return 0
 
 if __name__ == '__main__':
     raise NotImplementedError
