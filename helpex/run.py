@@ -13,7 +13,7 @@ from glob import glob
 from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import TYPE_CHECKING
-import json, logging, sys
+import json, logging
 
 from platformdirs import user_data_path
 from icecream import ic
@@ -21,9 +21,10 @@ from icecream import ic
 if TYPE_CHECKING:
     from typing import Any, NoReturn
 
-def die(msg: str, code: int=1) -> NoReturn:
-    print(msg, file=sys.stderr)
-    sys.exit(code)
+def die(msg: str, *args: Any, code: int=1) -> NoReturn:
+    logger = logging.getLogger(APPNAME)
+    logger.error(msg, *args)
+    exit(code)
 
 def parse_arguments():
     import argparse
