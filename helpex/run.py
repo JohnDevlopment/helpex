@@ -9,11 +9,12 @@ from __future__ import annotations
 
 from . import APPNAME
 from .command_doc import CommandDocumentation
+from .utils import get_env
 from glob import glob
 from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import TYPE_CHECKING
-import json, logging
+import json, logging, shutil, subprocess
 
 from platformdirs import user_data_path
 from icecream import ic
@@ -29,8 +30,32 @@ def die(msg: str, *args: Any, code: int=1) -> NoReturn:
 def parse_arguments():
     import argparse
     parser = argparse.ArgumentParser("helpex", description=__doc__)
+    parser.add_argument("-e", "--edit", action="store_true")
     parser.add_argument("COMMAND", nargs="?")
     return parser.parse_args()
+
+def _edit(fp: Path) -> int:
+    logger = logging.getLogger(APPNAME)
+    editor = get_env("EDITOR")
+    if editor is None:
+        die("EDITOR is not set in the environment.")
+
+    editor_path = shutil.which(editor)
+    if editor_path is None:
+        logger.warn("'%s' does not exist in PATH.", editor)
+        print(fp)
+        return 0
+
+    logger.debug("Using %s (path: '%s') to edit '%s'.",
+                 editor, editor_path, fp)
+
+    # Run $EDITOR on the file
+    cp = subprocess.run([editor_path, str(fp)], capture_output=True, text=True)
+    if cp.returncode:
+        # There is an error, so die
+        die(cp.stderr, code=cp.returncode)
+
+    return 0
 
 def main() -> int:
     args = parse_arguments()
@@ -53,6 +78,10 @@ def main() -> int:
         return 0
 
     fp = DATADIR / f"{cmd}.json"
+
+    if args.edit:
+        return _edit(fp)
+
     try:
         # Open command help file
         with open(fp, 'rt') as fd:
