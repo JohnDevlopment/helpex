@@ -10,6 +10,9 @@ readme = "README.md"
 python = ">=3.10"
 platformdirs = "^4.2.2"
 
+[tool.scripts]
+helpex = "helpex.run:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
