@@ -16,9 +16,6 @@ def setup_logging():
     LOGPATH = user_log_path("helpex")
     LOGPATH.mkdir(parents=True, exist_ok=True)
 
-    from icecream import ic
-    ic(LOGPATH)
-
     fp = Path(__file__).parent / "logging.yaml"
 
     with open(fp, 'rt') as fd:
