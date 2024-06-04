@@ -7,12 +7,16 @@ Information about the command is taken from
 
 from __future__ import annotations
 
+from . import APPNAME
 from .command_doc import CommandDocumentation
 from glob import glob
 from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import TYPE_CHECKING
-import json, sys
+import json, logging, sys
+
+from platformdirs import user_data_path
+from icecream import ic
 
 if TYPE_CHECKING:
     from typing import Any, NoReturn
@@ -31,15 +35,23 @@ def main():
     args = parse_arguments()
     cmd: str | None = args.COMMAND
 
+    logger = logging.getLogger(APPNAME)
+
+    # Data directory
+    DATADIR = user_data_path("helpex")
+    if not DATADIR.exists():
+        DATADIR.mkdir()
+        logger.info("Created '%s'.", DATADIR)
+    logger.debug("Data directory set to '%s'.", DATADIR)
+
     # List commands
     if cmd is None:
-        pth = Path("~/.local/etc/helpex").expanduser()
         print("Commands:")
-        for file in sorted(map(Path, glob(f"{pth}/*.json"))):
+        for file in sorted(map(Path, glob(f"{DATADIR}/*.json"))):
             print(f"    {file.stem}")
         return
 
-    fp = Path("~/.local/etc/helpex").expanduser() / f"{cmd}.json"
+    fp = DATADIR / f"{cmd}.json"
     try:
         with open(fp, 'rt') as fd:
             # Get documentation
