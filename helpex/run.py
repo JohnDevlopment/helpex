@@ -38,7 +38,9 @@ def _edit(fp: Path) -> int:
     logger = logging.getLogger(APPNAME)
     editor = get_env("EDITOR")
     if editor is None:
-        die("EDITOR is not set in the environment.")
+        logger.warn("EDITOR is not set in the environment.")
+        print(fp)
+        return 0
 
     editor_path = shutil.which(editor)
     if editor_path is None:
