@@ -14,7 +14,7 @@ pyyaml = "^6.0.1"
 [tool.poetry.group.dev.dependencies]
 icecream = "^2.1.3"
 
-[tool.scripts]
+[tool.poetry.scripts]
 helpex = "helpex.run:main"
 
 [build-system]
