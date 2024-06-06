@@ -23,6 +23,14 @@ class CommandDocumentation:
         self.exit_status: str | None = data.get('exit status', None)
         self.description: str = self._parse_description(data['description'])
 
+    # Utility functions
+
+    def _fill_text(self, text: str) -> str:
+        wrapper = self.wrapper
+        return "".join(wrapper.fill(text))
+
+    ###
+
     @property
     def terminal_width(self) -> int:
         term_size = shutil.get_terminal_size((87, 90))
@@ -49,40 +57,22 @@ class CommandDocumentation:
             case _:
                 _Logger.warn("Unknown object: %r", data)
 
-    def _parse_description(self, paras: list[str | list[str] | dict[str, Any]]) -> str:
+    def _parse_description(self, paras: list[str | dict[str, Any]]) -> str:
         if isinstance(paras, list):
-            INDENT = self.INDENT
             description: list[str] = []
             paragraph: str = ""
 
             # Wrap paragraphs
-            list_wrapper = TextWrapper(self.terminal_width - self.RIGHT_MARGIN, INDENT)
-            # wrapper = TextWrapper(self.terminal_width - self.RIGHT_MARGIN, INDENT, INDENT)
-            wrapper = self.wrapper
             for para in paras:
-                if isinstance(para, list):
-                    # Is a list of strings (denotes a list in the final string)
-                    items = para
-
-                    # Formate each list item as its own paragraph
-                    new_items: list[str] = []
-                    for item in items:
-                        # Prepend a bullet to each item
-                        item = "%s %s" % ("\u2022", item)
-
-                        # Calculate
-                        length = item.find("-") + 2
-                        list_wrapper.subsequent_indent = " " * length + self.INDENT
-                        new_items.append("".join(list_wrapper.fill(item)))
-
-                    paragraph = "\n".join(new_items)
-                elif isinstance(para, dict):
+                if isinstance(para, dict):
+                    # Para is a dict, so parse it as a "special object"
                     temp = self._parse_special_obj(para)
                     if temp is None:
                         continue
                     paragraph = temp
-                else:
-                    paragraph = "".join(wrapper.fill(para))
+                elif isinstance(para, str):
+                    # Is a string, treat as another paragraph
+                    paragraph = self._fill_text(para)
 
                 # Add "paragraph" to the list
                 description.append(paragraph)
