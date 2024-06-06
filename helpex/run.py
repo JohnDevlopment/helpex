@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING
 import json, logging, shutil, subprocess
 
 from platformdirs import user_data_path
-from icecream import ic
 
 if TYPE_CHECKING:
     from typing import Any, NoReturn
