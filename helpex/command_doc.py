@@ -1,4 +1,5 @@
 from __future__ import annotations
+from io import StringIO
 from . import APPNAME
 from textwrap import TextWrapper
 from typing import TYPE_CHECKING, cast
@@ -7,7 +8,7 @@ import logging, shutil
 _Logger = logging.getLogger(APPNAME)
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Iterable
 
 class CommandDocumentation:
     INDENT = "    "
@@ -29,6 +30,18 @@ class CommandDocumentation:
         wrapper = self.wrapper
         return "".join(wrapper.fill(text))
 
+    def _indent_text(self, text: str) -> str:
+        from io import StringIO
+        indent = self.wrapper.subsequent_indent
+        ofs = StringIO()
+
+        with StringIO(text) as ifs:
+            print(ifs.readline(), file=ofs)
+            for line in ifs:
+                print(f"{indent}{line}", file=ofs)
+        ofs.seek(0)
+        return ofs.read()
+
     ###
 
     @property
@@ -47,12 +60,47 @@ class CommandDocumentation:
 
         return "\n".join(result)
 
+    def _parse_options_obj(self, items: Iterable[list[str]]) -> str:
+        PADDING = 2
+        ofs = StringIO("Options:")
+
+        def _first_column_length(item: Iterable[str]):
+            result = 0
+            match item:
+                case [fc, sc]:
+                    result = max(len(fc), result)
+
+                case v:
+                    _Logger.error("Invalid option item '%s'", v)
+            return result
+
+        first_column_length = max(map(_first_column_length, items))
+
+        print(f"{self.INDENT}Options:", file=ofs)
+        for item in items:
+            kw = {
+                'indent': f"{self.INDENT}  ",
+                'fc': item[0],
+                'description': item[1],
+            }
+            fmt = "{indent}{fc:%d}{description}" % (first_column_length + PADDING)
+            print(fmt.format(**kw), file=ofs)
+
+        ofs.seek(0)
+
+        return ofs.read().rstrip()
+
     def _parse_special_obj(self, data: dict[str, str]) -> str | None:
         match data:
             case {'type': "list", 'heading': heading, 'items': items}:
                 assert isinstance(items, list)
                 items = cast(list[str], items)
                 return self._parse_list_obj(heading, items)
+
+            case {'type': "options", 'items': items}:
+                assert isinstance(items, list)
+                items = cast(list[list[str]], items)
+                return self._parse_options_obj(items)
 
             case _:
                 _Logger.warn("Unknown object: %r", data)
