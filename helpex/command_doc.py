@@ -121,6 +121,8 @@ class CommandDocumentation:
                 elif isinstance(para, str):
                     # Is a string, treat as another paragraph
                     paragraph = self._fill_text(para)
+                else:
+                    raise TypeError(f"Invalid type '{type(para).__name__}'")
 
                 # Add "paragraph" to the list
                 description.append(paragraph)
