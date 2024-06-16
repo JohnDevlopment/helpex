@@ -29,7 +29,13 @@ def die(msg: str, *args: Any, code: int=1) -> NoReturn:
 def parse_arguments():
     import argparse
     parser = argparse.ArgumentParser("helpex", description=__doc__)
-    parser.add_argument("-e", "--edit", action="store_true")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-e", "--edit", action="store_true",
+                       help="edit COMMAND's source file with either $VISUAL or $EDITOR")
+    group.add_argument('-p', '--path', action="store_true",
+                        help="print the path to COMMAND's source file")
+
     parser.add_argument("COMMAND", nargs="?")
     return parser.parse_args()
 
@@ -89,6 +95,9 @@ def main() -> int:
 
     if args.edit:
         return _edit(fp)
+    elif args.path:
+        print(fp)
+        return 0
 
     try:
         # Open command help file
