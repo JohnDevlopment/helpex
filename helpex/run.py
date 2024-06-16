@@ -14,7 +14,7 @@ from glob import glob
 from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import TYPE_CHECKING
-import json, logging, shutil, subprocess
+import json, logging, shlex, shutil, subprocess
 
 from platformdirs import user_data_path
 
@@ -35,26 +35,33 @@ def parse_arguments():
 
 def _edit(fp: Path) -> int:
     logger = logging.getLogger(APPNAME)
-    editor = get_env("EDITOR")
+
+    # Get either $VISUAL or $EDITOR
+    editor = get_env("VISUAL")
     if editor is None:
-        logger.warn("EDITOR is not set in the environment.")
-        print(fp)
+        logger.error("VISUAL is not set in the environment")
         return 0
 
+    # Looks for the absolute path to editor in $PATH
     editor_path = shutil.which(editor)
     if editor_path is None:
-        logger.warn("'%s' does not exist in PATH.", editor)
-        print(fp)
+        logger.error("'%s' does not exist in PATH.", editor)
         return 0
 
     logger.debug("Using %s (path: '%s') to edit '%s'.",
                  editor, editor_path, fp)
 
-    # Run $EDITOR on the file
-    cp = subprocess.run([editor_path, str(fp)], capture_output=True, text=True)
+    # $VISUAL_ARGS arg the arguments to $VISUAL, as the name would imply
+    editor_args = get_env("VISUAL_ARGS") or ""
+    editor_args = shlex.split(editor_args)
+
+    # Run $VISUAL on the file
+    cmd = [editor_path, *editor_args, str(fp)]
+    logger.debug("Command: $ %s", shlex.join(cmd))
+    cp = subprocess.run(cmd, text=True)
     if cp.returncode:
         # There is an error, so die
-        die(cp.stderr, code=cp.returncode)
+        die(f"{editor} returned error", code=cp.returncode)
 
     return 0
 
