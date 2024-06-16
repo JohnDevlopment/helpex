@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "helpex"
-version = "0.3.0"
+version = "0.4.0"
 description = "Write and display documentation for user-defined shell functions"
 authors = ["JohnDevlopment <50782633+JohnDevlopment@users.noreply.github.com>"]
 license = "MIT"
